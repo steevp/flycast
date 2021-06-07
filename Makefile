@@ -508,20 +508,21 @@ else ifneq (,$(findstring AMLG,$(platform)))
 
 # Rockchip RK3288 e.g. Asus Tinker Board / RK3328 e.g. PINE64 Rock64 / RK3399 e.g. PINE64 RockPro64 - 32-bit userspace
 else ifneq (,$(findstring RK,$(platform)))
+  CC_AS = gcc
   EXT ?= so
   TARGET := $(TARGET_NAME)_libretro.$(EXT)
   SHARED += -shared -Wl,--version-script=link.T
   fpic = -fPIC
   LIBS += -lrt
-  ARM_FLOAT_ABI_HARD = 1
+  ARM_FLOAT_ABI_HARD = 0
   FORCE_GLES = 1
   SINGLE_PREC_FLAGS = 1
-  CPUFLAGS += -DNO_ASM -DARM_ASM -frename-registers -ftree-vectorize
+  CPUFLAGS += -DTARGET_LINUX_ARMv8 -frename-registers -ftree-vectorize
   HAVE_LTCG = 0
 
   ifneq (,$(findstring RK33,$(platform)))
-    CFLAGS += -march=armv8-a+crc -mfpu=neon-fp-armv8
-    CXXFLAGS += -march=armv8-a+crc -mfpu=neon-fp-armv8
+    CFLAGS += -march=armv8-a+crc
+    CXXFLAGS += -march=armv8-a+crc
 
     ifneq (,$(findstring RK3399,$(platform)))
       CFLAGS += -mtune=cortex-a72.cortex-a53
@@ -532,21 +533,17 @@ else ifneq (,$(findstring RK,$(platform)))
       CORE_DEFINES += -DLOW_END
     endif
 
-    ifeq ($(HAVE_CLANG),0)
-      CFLAGS += -mvectorize-with-neon-quad
-      CXXFLAGS += -mvectorize-with-neon-quad
-    endif
   else ifneq (,$(findstring RK3288,$(platform)))
     CFLAGS += -march=armv7ve -mtune=cortex-a17 -mfpu=neon-vfpv4
     CXXFLAGS += -march=armv7ve -mtune=cortex-a17 -mfpu=neon-vfpv4
   endif
 
-  CFLAGS += -mfloat-abi=hard $(CPUFLAGS)
-  CXXFLAGS += -mfloat-abi=hard $(CPUFLAGS)
+  CFLAGS += $(CPUFLAGS)
+  CXXFLAGS += $(CPUFLAGS)
 
   ASFLAGS += $(CFLAGS) -c -frename-registers -fno-strict-aliasing -ffast-math -ftree-vectorize
   PLATFORM_EXT := unix
-  WITH_DYNAREC=arm
+  WITH_DYNAREC=arm64
   HAVE_GENERIC_JIT = 0
 
 # RockPro64
